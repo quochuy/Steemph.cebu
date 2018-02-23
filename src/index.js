@@ -20,7 +20,8 @@ db();
 import {
   checkRegisteredUser,
   checkLastPost,
-  updateTime
+  updateTime,
+  registration
 } from './controller/user';
 
 import {
@@ -34,6 +35,7 @@ import regex from './regex.json';
 // ============================================================
 // Start Discord
 // ============================================================
+let timeDiff;
 const client = new Discord.Client();
 
 // ============================================================
@@ -87,36 +89,88 @@ client.on('message', msg => {
               authorName.charAt(0) === '@' &&
               !!permlinkName
             ) {
-              upvotePost(
-                process.env.STEEM_POSTING,
-                process.env.STEEM_USERNAME,
-                authorName.substr(1),
-                permlinkName,
-                500
-              )
-                .then(data => {
-                  if (data === 'ERROR') {
-                    throw 'NO_UPVOTE';
+              // **************************************************
+              // Check registered user
+              // **************************************************
+              checkRegisteredUser(currentUserId)
+                .then(isRegistered => {
+                  console.log(isRegistered);
+                  if (isRegistered) {
+                    // **************************************************
+                    // Check date time
+                    // **************************************************
+
+                    console.log('registered');
                   } else {
-                    msg.reply(`Upvoted`);
-                    return;
+                    console.log('not registered');
+                    // **************************************************
+                    // Register user
+                    // **************************************************
+                    return registration(
+                      currentUsername,
+                      currentUserId
+                    )
+                      .then(data => {
+                        console.log(data);
+                        if (data === 'ERROR') {
+                          throw data;
+                        }
+                      })
+                      .catch(err => err);
                   }
                 })
                 .then(() => {
-                  return commentPost(
+                  // **************************************************
+                  // Upvote Post
+                  // **************************************************
+                  return upvotePost(
                     process.env.STEEM_POSTING,
                     process.env.STEEM_USERNAME,
                     authorName.substr(1),
-                    permlinkName
-                  ).catch(() => {
-                    msg.reply('Unable to comment');
-                  });
+                    permlinkName,
+                    500
+                  )
+                    .then(data => {
+                      if (data === 'ERROR') {
+                        throw 'NO_UPVOTE';
+                      } else {
+                        msg.reply(`Upvoted`);
+                        return;
+                      }
+                    })
+                    .then(() => {
+                      // **************************************************
+                      // Update Date Time of the Post
+                      // **************************************************
+                    })
+                    .then(() => {
+                      // **************************************************
+                      // Comment on  Post
+                      // **************************************************
+                      return commentPost(
+                        process.env.STEEM_POSTING,
+                        process.env.STEEM_USERNAME,
+                        authorName.substr(1),
+                        permlinkName
+                      ).catch(() => {
+                        msg.reply('Unable to comment');
+                      });
+                    })
+                    .catch();
                 })
-                .catch(() => {
-                  msg.reply(
-                    'The post cannot be upvoted. It might be upvoted already.'
-                  );
+                .catch(err => {
+                  switch (err) {
+                    case 'NO_UPVOTE':
+                      msg.reply(
+                        'The post cannot be upvoted. It might be upvoted already.'
+                      );
+                      break;
+                    default:
+                      msg.reply('ERROR');
+                      break;
+                  }
                 });
+
               break;
             } else {
               msg.reply('Invalid link');

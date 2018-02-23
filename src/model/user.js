@@ -5,7 +5,6 @@ let Schema = mongoose.Schema;
 let userSchema = new Schema({
   name: { type: String, required: true },
   discordid: { type: String, required: true, unique: true },
-  steemname: { type: String, required: true },
   lastpostdatetime: { type: Number }
   // timestamp: true
 });

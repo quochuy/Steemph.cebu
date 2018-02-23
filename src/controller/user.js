@@ -70,4 +70,32 @@ const updateTime = (discordId, time) => {
   ).catch(err => 'Error');
 };
 
-export { checkRegisteredUser, checkLastPost, updateTime };
+const registration = (discordName, discordId) => {
+  let user = new User({
+    name: discordName,
+    discordid: discordId
+  });
+
+  let result = user
+    .save(err => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      return;
+    })
+    .then(data => {
+      return `created user`;
+    })
+    .catch(err => {
+      return 'ERROR';
+    });
+  return result;
+};
+
+export {
+  checkRegisteredUser,
+  checkLastPost,
+  updateTime,
+  registration
+};
