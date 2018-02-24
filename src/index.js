@@ -158,7 +158,13 @@ client.on('message', msg => {
                       if (data === 'ERROR') {
                         throw 'NO_UPVOTE';
                       } else {
-                        msg.reply(`Upvoted`);
+                        msg.reply(` this post is successfully upvoted by @Steemph.cebu#5291 : ${
+                          args[0]
+                        }.
+
+You are now in voting cooldown. ${config.timeAllowed /
+                          60 /
+                          60} hours left before you can request for an upvote.`);
                         return;
                       }
                     })
@@ -194,16 +200,15 @@ client.on('message', msg => {
                   switch (err) {
                     case 'NO_UPVOTE':
                       msg.reply(
-                        'The post cannot be upvoted. It might be upvoted already or the link is invalid.'
+                        'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote (Space) URL of your post`.'
                       );
                       break;
                     case 'NOT_YET_TIME':
                       msg.reply(
-                        `Please wait for ${timeConvertMessage(
-                          convert(
-                            config.timeAllowed - timeDiff
-                          )
-                        )}`
+                        `I had already voted on one of your post. Please wait for
+ ${timeConvertMessage(
+   convert(config.timeAllowed - timeDiff)
+ )}.`
                       );
                       break;
                     case 'DB_ERROR':
