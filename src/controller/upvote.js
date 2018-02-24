@@ -45,7 +45,7 @@ function commentPost(
       '', // Title
       `um... please don't mind me, I am just testing this out. I am not spamming, really. I'll be on my way now. oh yes... I just upvoted you by the way. Stephard Tester, superoo7/superoo7-dev`, // Body of post
       {
-        tags: ['teammalaysiadevtest', 'teammalaysia'],
+        tags: ['philippines'],
         app: 'stephard/0.1'
       }, // json metadata (additional tags, app name, etc)
       function(err, result) {

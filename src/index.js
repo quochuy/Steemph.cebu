@@ -3,6 +3,7 @@ import * as logger from 'winston';
 import * as dotenv from 'dotenv';
 import * as steem from 'steem';
 import * as http from 'http';
+import convert from 'convert-seconds';
 
 import 'babel-polyfill';
 
@@ -23,11 +24,15 @@ import {
   updateTime,
   registration
 } from './controller/user';
-
 import {
   upvotePost,
   commentPost
 } from './controller/upvote';
+
+import {
+  getDateTimeFromTimestamp,
+  timeConvertMessage
+} from './controller/util';
 
 import config from './config.json';
 import regex from './regex.json';
@@ -82,7 +87,10 @@ client.on('message', msg => {
       args = args.splice(1);
       switch (cmd) {
         case 'upvote':
-          if (args.length === 1) {
+          if (
+            args.length === 1 &&
+            args[0].split(/[\/#]/).length === 6
+          ) {
             let authorName = args[0].split(/[\/#]/)[4];
             let permlinkName = args[0].split(/[\/#]/)[5];
             if (
@@ -99,6 +107,22 @@ client.on('message', msg => {
                     // **************************************************
                     // Check date time
                     // **************************************************
+                    return checkLastPost(
+                      currentUserId
+                    ).then(data => {
+                      if (!!data) {
+                        timeDiff = Math.floor(
+                          (currentCreatedTimestamp - data) /
+                            1000
+                        );
+                        if (timeDiff > config.timeAllowed) {
+                          // Proceed
+                        } else {
+                          throw 'NOT_YET_TIME';
+                          return;
+                        }
+                      }
+                    });
 
                     console.log('registered');
                   } else {
@@ -112,7 +136,7 @@ client.on('message', msg => {
                     )
                       .then(data => {
                         console.log(data);
-                        if (data === 'ERROR') {
+                        if (data === 'DB_ERROR') {
                           throw data;
                         }
                       })
@@ -142,6 +166,10 @@ client.on('message', msg => {
                       // **************************************************
                       // Update Date Time of the Post
                       // **************************************************
+                      return updateTime(
+                        currentUserId,
+                        currentCreatedTimestamp
+                      );
                     })
                     .then(() => {
                       // **************************************************
@@ -162,8 +190,20 @@ client.on('message', msg => {
                   switch (err) {
                     case 'NO_UPVOTE':
                       msg.reply(
-                        'The post cannot be upvoted. It might be upvoted already.'
+                        'The post cannot be upvoted. It might be upvoted already or the link is invalid.'
                       );
+                      break;
+                    case 'NOT_YET_TIME':
+                      msg.reply(
+                        `Please wait for ${timeConvertMessage(
+                          convert(
+                            config.timeAllowed - timeDiff
+                          )
+                        )}`
+                      );
+                      break;
+                    case 'DB_ERROR':
+                      msg.reply('Database Error');
                       break;
                     default:
                       msg.reply('ERROR');

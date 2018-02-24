@@ -1122,6 +1122,10 @@ console-control-strings@^1.0.0, console-control-strings@~1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/console-control-strings/-/console-control-strings-1.1.0.tgz#3d7cf4464db6446ea644bf4b39507f9851008e8e"
 
+convert-seconds@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/convert-seconds/-/convert-seconds-1.0.1.tgz#fa0cc4e6564ed58d976cc92468493d271d430b02"
+
 convert-source-map@^1.5.0:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-1.5.1.tgz#b8278097b9bc229365de5c62cf5fcaed8b5599e5"
