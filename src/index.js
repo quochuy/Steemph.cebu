@@ -169,7 +169,13 @@ client.on('message', msg => {
                       return updateTime(
                         currentUserId,
                         currentCreatedTimestamp
-                      );
+                      )
+                        .then(() =>
+                          console.log(`data updated`)
+                        )
+                        .catch(() => {
+                          throw 'DB_ERROR';
+                        });
                     })
                     .then(() => {
                       // **************************************************
@@ -180,13 +186,11 @@ client.on('message', msg => {
                         process.env.STEEM_USERNAME,
                         authorName.substr(1),
                         permlinkName
-                      ).catch(() => {
-                        msg.reply('Unable to comment');
-                      });
-                    })
-                    .catch();
+                      );
+                    });
                 })
                 .catch(err => {
+                  console.log(err);
                   switch (err) {
                     case 'NO_UPVOTE':
                       msg.reply(
@@ -204,6 +208,9 @@ client.on('message', msg => {
                       break;
                     case 'DB_ERROR':
                       msg.reply('Database Error');
+                      break;
+                    case 'NO_COMMENT':
+                      msg.reply('No comment');
                       break;
                     default:
                       msg.reply('ERROR');
