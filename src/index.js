@@ -229,9 +229,7 @@ You are now in voting cooldown. ${config.timeAllowed /
             }
           } else {
             msg.reply(
-              `Wrong format, please use \`${
-                config.trigger
-              }upvote\ <steemit link>\``
+              'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote (Space) URL of your post`.'
             );
           }
           break;
