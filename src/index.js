@@ -58,7 +58,7 @@ client.on('message', msg => {
   // **************************************************
   // Restricted Channel
   // **************************************************
-  if (msg.channel.id !== config.channelId) {
+  if (!config.channelId.include(msg.channel.id)) {
     return;
   } else {
     // **************************************************
@@ -77,6 +77,21 @@ client.on('message', msg => {
 
     logger.info(currentContent);
 
+    // **************************************************
+    // Check for Bot message
+    // **************************************************
+
+    if (id === config.botId) {
+      return;
+    }
+    // **************************************************
+    // Check for Admin
+    // **************************************************
+
+    if (msg.channel.id === config.adminId) {
+      msg.reply('admin');
+      return;
+    }
     // **************************************************
     // Check for trigger
     // **************************************************
