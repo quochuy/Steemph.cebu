@@ -152,7 +152,7 @@ client.on('message', msg => {
                     process.env.STEEM_USERNAME,
                     authorName.substr(1),
                     permlinkName,
-                    500
+                    config.weightage
                   )
                     .then(data => {
                       if (data === 'ERROR') {

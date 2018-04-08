@@ -2,5 +2,6 @@
   "mongoUrl": "MONGODB URL",
   "channelId": "123123123",
   "trigger": "$",
-  "timeAllowed": "43200"
+  "timeAllowed": "43200",
+  "weightage": "500"
 }
