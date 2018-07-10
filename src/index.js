@@ -235,7 +235,7 @@ client.on('message', msg => {
                         throw ('SP too low')
                     }
                     weightage = weightage / 2
-                    greenMsg(`Role: trail-follower, SP: ${sp}, upvote %: ${weightage}`)
+                    greenMsg(`Role: trail-follower, SP: ${sp}, upvote %: ${weightage/100}`)
                   } else {
                     // if a person is a delegator
                     const temp = await getDelegateSP(authorName.substr(1)).catch(err => {
@@ -307,7 +307,7 @@ client.on('message', msg => {
                         console.log('no delegation')
                         throw ('No delegation')
                     }
-                    greenMsg(`Role: delegator, delegated SP: ${sp}, upvote %: ${weightage}`)
+                    greenMsg(`Role: delegator, delegated SP: ${sp}, upvote %: ${weightage/100}`)
                   }
 
                   if (weightage === 0) {
