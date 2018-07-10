@@ -9,48 +9,28 @@ function randomString() {
   let string = '';
   let allowedChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   for (var i = 0; i < 32; i++) {
-    string += allowedChars.charAt(
-      Math.floor(Math.random() * allowedChars.length)
-    );
+    string += allowedChars.charAt(Math.floor(Math.random() * allowedChars.length));
   }
   return string + '-post';
 }
 
-function upvotePost(
-  steem_posting_key,
-  steem_username,
-  author,
-  permlink,
-  weightage
-) {
+function upvotePost(steem_posting_key, steem_username, author, permlink, weightage) {
   return new Promise(function (resolve, reject) {
-    steem.broadcast.vote(
-      steem_posting_key,
-      steem_username,
-      author,
-      permlink,
-      weightage,
-      function (err, result) {
-        if (err) {
-          reject('ERROR');
-        } else if (!result) {
-          reject('ERROR');
-        } else if (!!result.id && !!result.block_num) {
-          resolve(result);
-        } else {
-          reject('ERROR');
-        }
+    steem.broadcast.vote(steem_posting_key, steem_username, author, permlink, weightage, function (err, result) {
+      if (err) {
+        reject('ERROR');
+      } else if (!result) {
+        reject('ERROR');
+      } else if (!!result.id && !!result.block_num) {
+        resolve(result);
+      } else {
+        reject('ERROR');
       }
-    );
+    });
   }).catch(err => 'ERROR');
 }
 
-function commentPost(
-  steem_posting_key,
-  steem_username,
-  author,
-  permlink
-) {
+function commentPost(steem_posting_key, steem_username, author, permlink) {
   return steem.broadcast.comment(
     steem_posting_key, // posting wif
     author, // author, leave blank for new post
@@ -72,108 +52,110 @@ function commentPost(
   );
 }
 
-
-const findPost = (
-  author,
-  permlink
-) => {
+const findPost = (author, permlink) => {
   return new Promise((resolve, reject) => {
     steem.api.getContent(author, permlink, (err, result) => {
       if (err) {
-        reject(new Error(err))
+        reject(new Error(err));
       }
 
       // check cheetah
       const isCheetah =
-        result.active_votes.filter((data) => {
+        result.active_votes.filter(data => {
           if (data.voter === 'cheetah') {
-            return true
+            return true;
           }
-          return false
-        }).length !== 0
-      if (isCheetah) reject(new Error("CHEETAH"))
+          return false;
+        }).length !== 0;
+      if (isCheetah) reject(new Error('CHEETAH'));
 
       const isVoted =
-        result.active_votes.filter((data) => {
+        result.active_votes.filter(data => {
           if (data.voter === process.env.STEEM_USERNAME) {
-            return true
+            return true;
           }
-          return false
-        }).length !== 0
+          return false;
+        }).length !== 0;
 
-      if (isVoted) reject(new Error("VOTED"))
+      if (isVoted) reject(new Error('VOTED'));
 
       const unixDate = new Date(
         result.created
         .replace(/-/g, '/')
         .replace('T', ' ')
         .replace('Z', '')
-      ).getTime()
+      ).getTime();
 
-      const postAge = Date.now() - unixDate
+      const postAge = Date.now() - unixDate;
       if (postAge > parseInt(config.maximumPostAge)) {
-        reject(new Error("OLD"))
+        reject(new Error('OLD'));
       } else if (postAge < parseInt(config.minimumPostAge)) {
-        reject(new Error("NEW"))
+        reject(new Error('NEW'));
       }
 
       resolve({
-        msg: "success"
-      })
-    })
-  })
-}
+        msg: 'success'
+      });
+    });
+  });
+};
 
-const getSteemPower = async (name) => {
+const getSteemPower = async name => {
   const spVest = await new Promise((resolve, reject) => {
     return steem.api.getAccounts([name], (err, result) => {
-      if (err) reject(new Error(err))
-      let r = result[0]
-      let vestingShares = parseFloat(r.vesting_shares) ? parseFloat(r.vesting_shares) : 0
-      let delegatedVestingShares = parseFloat(r.delegated_vesting_shares) ? parseFloat(r.delegated_vesting_shares) : 0
-      let receivedVestingShares = parseFloat(r.received_vesting_shares) ? parseFloat(r.received_vesting_shares) : 0
-      resolve(vestingShares - delegatedVestingShares + receivedVestingShares)
-    })
-  })
+      if (err) reject(new Error(err));
+      let r = result[0];
+      let vestingShares = parseFloat(r.vesting_shares) ? parseFloat(r.vesting_shares) : 0;
+      let delegatedVestingShares = parseFloat(r.delegated_vesting_shares) ? parseFloat(r.delegated_vesting_shares) : 0;
+      let receivedVestingShares = parseFloat(r.received_vesting_shares) ? parseFloat(r.received_vesting_shares) : 0;
+      resolve(vestingShares - delegatedVestingShares + receivedVestingShares);
+    });
+  });
   let {
     totalVestingShares,
     totalVestingFundSteem
   } = await new Promise((resolve, reject) => {
     return steem.api.getDynamicGlobalProperties((err, result) => {
-      if (err) reject(new Error(err))
+      if (err) reject(new Error(err));
       resolve({
         totalVestingShares: parseFloat(result.total_vesting_shares),
         totalVestingFundSteem: parseFloat(result.total_vesting_fund_steem)
-      })
-    })
-  })
-  const steemPower = steem.formatter.vestToSteem(spVest, totalVestingShares, totalVestingFundSteem)
-  return steemPower
-}
+      });
+    });
+  });
+  const steemPower = steem.formatter.vestToSteem(spVest, totalVestingShares, totalVestingFundSteem);
+  return steemPower;
+};
 
 const getDelegateSP = async (name, delegatee) => {
   const allDelegatee = await new Promise((resolve, reject) => {
     return steem.api.getVestingDelegations(name, '', 100, function (err, result) {
-      if (err) reject(new Error(err))
-      resolve(result)
+      if (err) reject(new Error(err));
+      resolve(result);
     });
-  })
-  const [checkDelegateTarget] = allDelegatee.filter((data) => !!(data.delegatee === delegatee))
+  });
+  const temp = allDelegatee.filter(data => !!(data.delegatee === delegatee));
+  if (temp.length !== 1) return 0
+  const checkDelegateTarget = temp[0]
   let {
     totalVestingShares,
     totalVestingFundSteem
   } = await new Promise((resolve, reject) => {
     return steem.api.getDynamicGlobalProperties((err, result) => {
-      if (err) reject(new Error(err))
+      if (err) reject(new Error(err));
       resolve({
         totalVestingShares: parseFloat(result.total_vesting_shares),
         totalVestingFundSteem: parseFloat(result.total_vesting_fund_steem)
-      })
-    })
-  })
-  const steemPower = steem.formatter.vestToSteem(checkDelegateTarget.vesting_shares, totalVestingShares, totalVestingFundSteem)
-  return steemPower
-}
+      });
+    });
+  });
+  const steemPower = steem.formatter.vestToSteem(
+    checkDelegateTarget.vesting_shares,
+    totalVestingShares,
+    totalVestingFundSteem
+  );
+  return steemPower;
+};
 
 export {
   upvotePost,

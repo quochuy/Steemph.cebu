@@ -27,7 +27,9 @@ import {
 import {
   upvotePost,
   commentPost,
-  findPost
+  findPost,
+  getSteemPower,
+  getDelegateSP
 } from './controller/upvote';
 
 import {
@@ -83,15 +85,22 @@ client.on('message', msg => {
     logger.info(currentContent);
 
     // setup function
-    const redMsg = (reply) => {
+    const redMsg = reply => {
       return msg.reply({
         embed: {
           color: 0xff0000,
           description: reply
         }
-      })
-    }
-
+      });
+    };
+    const greenMsg = reply => {
+      return msg.reply({
+        embed: {
+          color: 0x00f900,
+          description: reply
+        }
+      });
+    };
     // **************************************************
     // Check for trigger
     // **************************************************
@@ -102,16 +111,10 @@ client.on('message', msg => {
       args = args.splice(1);
       switch (cmd) {
         case 'upvote':
-          if (
-            args.length === 1 &&
-            args[0].split(/[\/#]/).length === 6
-          ) {
+          if (args.length === 1 && args[0].split(/[\/#]/).length === 6) {
             let authorName = args[0].split(/[\/#]/)[4];
             let permlinkName = args[0].split(/[\/#]/)[5];
-            if (
-              authorName.charAt(0) === '@' &&
-              !!permlinkName
-            ) {
+            if (authorName.charAt(0) === '@' && !!permlinkName) {
               // **************************************************
               // Check registered user
               // **************************************************
@@ -122,14 +125,9 @@ client.on('message', msg => {
                     // **************************************************
                     // Check date time
                     // **************************************************
-                    return checkLastPost(
-                      currentUserId
-                    ).then(data => {
+                    return checkLastPost(currentUserId).then(data => {
                       if (!!data) {
-                        timeDiff = Math.floor(
-                          (currentCreatedTimestamp - data) /
-                          1000
-                        );
+                        timeDiff = Math.floor((currentCreatedTimestamp - data) / 1000);
                         if (timeDiff > config.timeAllowed) {
                           // Proceed
                         } else {
@@ -138,40 +136,181 @@ client.on('message', msg => {
                         }
                       }
                     });
-
-                    console.log('registered');
                   } else {
                     console.log('not registered');
                     // **************************************************
                     // Register user
                     // **************************************************
-                    return registration(
-                        currentUsername,
-                        currentUserId
-                      )
+                    return registration(currentUsername, currentUserId)
                       .then(data => {
                         console.log(data);
                         if (data === 'DB_ERROR') {
                           throw data;
                         }
                       })
-                      .catch(err => err);
                   }
                 })
                 .then(async () => {
-                  console.log('find post')
+                  console.log('find post');
                   return await findPost(authorName.substr(1), permlinkName).catch(err => {
-                    throw err.message
-                  })
+                    throw err.message;
+                  });
                 })
-                .then(() => {
-                  console.log('upvote post')
+                .then(async () => {
+                  console.log('upvote post');
                   // **************************************************
                   // Upvote Post
                   // **************************************************
-                  let weightage
+                  let weightage = 0;
 
+                  if (!msg.member.roles.find('name', 'trail-follower')) {
+                    // if a person has the role of 'trail-follower'
+                    const temp = await getSteemPower(authorName.substr(1)).catch(err => {
+                      throw (err)
+                    });
+                    const sp = Math.round(temp)
+                    switch (true) {
+                      case (sp > 190): // 191-200=50%
+                        weightage = 50 * 100
+                        break
+                      case (sp > 180): // 181-190=48%
+                        weightage = 48 * 100
+                        break
+                      case (sp > 170): // 171-180=46%
+                        weightage = 46 * 100
+                        break
+                      case (sp > 160): // 161-170=44%
+                        weightage = 44 * 100
+                        break
+                      case (sp > 150): // 151-160=42%
+                        weightage = 42 * 100
+                        break
+                      case (sp > 140): // 141-150=40%
+                        weightage = 40 * 100
+                        break
+                      case (sp > 130): // 131-140=38%
+                        weightage = 38 * 100
+                        break
+                      case (sp > 120): // 121-130=36%
+                        weightage = 36 * 100
+                        break
+                      case (sp > 110): // 111-120=34%
+                        weightage = 34 * 100
+                        break
+                      case (sp > 100): // 101-110=32%
+                        weightage = 32 * 100
+                        break
+                      case (sp > 90): // 91-100=30%
+                        weightage = 30 * 100
+                        break
+                      case (sp > 80): // 81-90=28%
+                        weightage = 28 * 100
+                        break
+                      case (sp > 70): // 71-80=26%
+                        weightage = 26 * 100
+                        break
+                      case (sp > 60): // 61-70=24%
+                        weightage = 24 * 100
+                        break
+                      case (sp > 50): // 51-60=22%
+                        weightage = 22 * 100
+                        break
+                      case (sp > 40): // 41-50=20%
+                        weightage = 20 * 100
+                        break
+                      case (sp > 30): // 31-40=18%
+                        weightage = 18 * 100
+                        break
+                      case (sp > 20): // 21-30=16%
+                        weightage = 16 * 100
+                        break
+                      case (sp > 10): // 11-20=14%
+                        weightage = 14 * 100
+                        break
+                      case (sp > 1): // 1-10=12%
+                        weightage = 12 * 100
+                        break
+                      default:
+                        throw ('SP too low')
+                    }
+                    weightage = weightage / 2
+                    greenMsg(`Role: trail-follower, SP: ${SP}, upvote %: ${weightage}`)
+                  } else {
+                    // if a person is a delegator
+                    const temp = await getDelegateSP(authorName.substr(1)).catch(err => {
+                      throw (err)
+                    });
+                    const sp = Math.round(temp)
+                    switch (true) {
+                      case (sp > 190): // 191-200=50%
+                        weightage = 50 * 100
+                        break
+                      case (sp > 180): // 181-190=48%
+                        weightage = 48 * 100
+                        break
+                      case (sp > 170): // 171-180=46%
+                        weightage = 46 * 100
+                        break
+                      case (sp > 160): // 161-170=44%
+                        weightage = 44 * 100
+                        break
+                      case (sp > 150): // 151-160=42%
+                        weightage = 42 * 100
+                        break
+                      case (sp > 140): // 141-150=40%
+                        weightage = 40 * 100
+                        break
+                      case (sp > 130): // 131-140=38%
+                        weightage = 38 * 100
+                        break
+                      case (sp > 120): // 121-130=36%
+                        weightage = 36 * 100
+                        break
+                      case (sp > 110): // 111-120=34%
+                        weightage = 34 * 100
+                        break
+                      case (sp > 100): // 101-110=32%
+                        weightage = 32 * 100
+                        break
+                      case (sp > 90): // 91-100=30%
+                        weightage = 30 * 100
+                        break
+                      case (sp > 80): // 81-90=28%
+                        weightage = 28 * 100
+                        break
+                      case (sp > 70): // 71-80=26%
+                        weightage = 26 * 100
+                        break
+                      case (sp > 60): // 61-70=24%
+                        weightage = 24 * 100
+                        break
+                      case (sp > 50): // 51-60=22%
+                        weightage = 22 * 100
+                        break
+                      case (sp > 40): // 41-50=20%
+                        weightage = 20 * 100
+                        break
+                      case (sp > 30): // 31-40=18%
+                        weightage = 18 * 100
+                        break
+                      case (sp > 20): // 21-30=16%
+                        weightage = 16 * 100
+                        break
+                      case (sp > 10): // 11-20=14%
+                        weightage = 14 * 100
+                        break
+                      case (sp > 1): // 1-10=12%
+                        weightage = 12 * 100
+                        break
+                      default:
+                        throw ('No delegation')
+                    }
+                    greenMsg(`Role: delegator, delegated SP: ${SP}, upvote %: ${weightage}`)
+                  }
 
+                  if (weightage === 0) {
+                    throw 'NO_DELEGATE';
+                  }
 
                   return upvotePost(
                       process.env.STEEM_POSTING,
@@ -184,13 +323,8 @@ client.on('message', msg => {
                       if (data === 'ERROR') {
                         throw 'NO_UPVOTE';
                       } else {
-                        msg.reply(`This post is successfully upvoted by ${client.user.tag} : ${
-                          args[0]
-                        }.
-
-You are now in voting cooldown. ${config.timeAllowed /
-                          60 /
-                          60} hours left before you can request for an upvote.`);
+                        msg.reply(`This post is successfully upvoted by ${client.user.tag} : ${args[0]}.
+You are now in voting cooldown. ${config.timeAllowed / 60 / 60} hours left before you can request for an upvote.`);
                         return;
                       }
                     })
@@ -198,17 +332,12 @@ You are now in voting cooldown. ${config.timeAllowed /
                       // **************************************************
                       // Update Date Time of the Post
                       // **************************************************
-                      return updateTime(
-                          currentUserId,
-                          currentCreatedTimestamp
-                        )
-                        .then(() =>
-                          console.log(`data updated`)
-                        )
+                      return updateTime(currentUserId, currentCreatedTimestamp)
+                        .then(() => console.log(`data updated`))
                         .catch(() => {
                           throw 'DB_ERROR';
                         });
-                    })
+                    });
                   // .then(() => {
                   //   // **************************************************
                   //   // Comment on  Post
@@ -222,8 +351,10 @@ You are now in voting cooldown. ${config.timeAllowed /
                   // });
                 })
                 .catch(err => {
-
                   switch (err) {
+                    case 'NO_DELEGATE':
+                      redMsg('You had not yet delegate to the bot.');
+                      break;
                     case 'NO_UPVOTE':
                       redMsg(
                         'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote <steemit_link>` \n e.g. `$upvote https://steemit.com/blabla/@bla/bla`'
@@ -232,9 +363,7 @@ You are now in voting cooldown. ${config.timeAllowed /
                     case 'NOT_YET_TIME':
                       redMsg(
                         `I had already voted on one of your post. Please wait for
- ${timeConvertMessage(
-   convert(config.timeAllowed - timeDiff)
- )}.`
+ ${timeConvertMessage(convert(config.timeAllowed - timeDiff))}.`
                       );
                       break;
                     case 'DB_ERROR':
@@ -267,22 +396,17 @@ You are now in voting cooldown. ${config.timeAllowed /
             }
           } else {
             redMsg(
-              'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote <steemit_link>` \n e.g. `$upvote https://steemit.com/blabla/@bla/bla`');
+              'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote <steemit_link>` \n e.g. `$upvote https://steemit.com/blabla/@bla/bla`'
+            );
           }
           break;
         case 'help':
           msg.reply(`
-            \`${
-              config.trigger
-            }upvote\ <steemit link>\` to get your post upvoted.
-            \`${
-              config.trigger
-            }help\` to get help on getting started`);
+            \`${config.trigger}upvote\ <steemit link>\` to get your post upvoted.
+            \`${config.trigger}help\` to get help on getting started`);
           break;
         default:
-          msg.reply(
-            `Type \`${config.trigger}help\` to get started`
-          );
+          msg.reply(`Type \`${config.trigger}help\` to get started`);
           break;
       }
     }

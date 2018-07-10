@@ -2,30 +2,24 @@ import mongoose from 'mongoose';
 import User from '../model/user';
 
 let checkRegisteredUser = discordId => {
-  return User.findOne(
-    { discordid: discordId },
-    (err, user) => {
-      if (err || !!user) {
-        return false;
-      }
-
-      return true;
+  return User.findOne({ discordid: discordId }, (err, user) => {
+    if (err || !!user) {
+      return false;
     }
-  )
+
+    return true;
+  })
     .then(data => (!!data ? true : false))
     .catch(err => false);
 };
 
 let checkLastPost = discordId => {
-  return User.findOne(
-    { discordid: discordId },
-    (err, user) => {
-      if (err || !user) {
-        console.log('error');
-      }
-      return;
+  return User.findOne({ discordid: discordId }, (err, user) => {
+    if (err || !user) {
+      console.log('error');
     }
-  )
+    return;
+  })
     .then(data => {
       if (!!data) {
         return data.lastpostdatetime;
@@ -41,33 +35,30 @@ let checkLastPost = discordId => {
 };
 
 const updateTime = (discordId, time) => {
-  return User.findOne(
-    { discordid: discordId },
-    (err, user) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      console.log('success');
-      user.lastpostdatetime = time;
-      let result = user
-        .save(err => {
-          if (err) {
-            console.log(err);
-            return;
-          }
-          console.log('success');
-          return;
-        })
-        .then(data => {
-          return;
-        })
-        .catch(err => {
-          return;
-        });
-      return result;
+  return User.findOne({ discordid: discordId }, (err, user) => {
+    if (err) {
+      console.log(err);
+      return;
     }
-  ).catch(err => 'Error');
+    console.log('success');
+    user.lastpostdatetime = time;
+    let result = user
+      .save(err => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        console.log('success');
+        return;
+      })
+      .then(data => {
+        return;
+      })
+      .catch(err => {
+        return;
+      });
+    return result;
+  }).catch(err => 'Error');
 };
 
 const registration = (discordName, discordId) => {
@@ -93,9 +84,4 @@ const registration = (discordName, discordId) => {
   return result;
 };
 
-export {
-  checkRegisteredUser,
-  checkLastPost,
-  updateTime,
-  registration
-};
+export { checkRegisteredUser, checkLastPost, updateTime, registration };
