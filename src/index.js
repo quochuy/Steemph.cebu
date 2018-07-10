@@ -238,7 +238,7 @@ client.on('message', msg => {
                     greenMsg(`Role: trail-follower, SP: ${sp}, upvote %: ${weightage/100}`)
                   } else {
                     // if a person is a delegator
-                    const temp = await getDelegateSP(authorName.substr(1)).catch(err => {
+                    const temp = await getDelegateSP(authorName.substr(1), process.env.STEEM_USERNAME).catch(err => {
                       throw (err)
                     });
                     const sp = Math.round(temp)
