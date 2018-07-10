@@ -231,10 +231,11 @@ client.on('message', msg => {
                         weightage = 12 * 100
                         break
                       default:
+                        console.log('SP too low')
                         throw ('SP too low')
                     }
                     weightage = weightage / 2
-                    greenMsg(`Role: trail-follower, SP: ${SP}, upvote %: ${weightage}`)
+                    greenMsg(`Role: trail-follower, SP: ${sp}, upvote %: ${weightage}`)
                   } else {
                     // if a person is a delegator
                     const temp = await getDelegateSP(authorName.substr(1)).catch(err => {
@@ -303,9 +304,10 @@ client.on('message', msg => {
                         weightage = 12 * 100
                         break
                       default:
+                        console.log('no delegation')
                         throw ('No delegation')
                     }
-                    greenMsg(`Role: delegator, delegated SP: ${SP}, upvote %: ${weightage}`)
+                    greenMsg(`Role: delegator, delegated SP: ${sp}, upvote %: ${weightage}`)
                   }
 
                   if (weightage === 0) {
@@ -351,6 +353,7 @@ You are now in voting cooldown. ${config.timeAllowed / 60 / 60} hours left befor
                   // });
                 })
                 .catch(err => {
+                  console.log(err)
                   switch (err) {
                     case 'NO_DELEGATE':
                       redMsg('You had not yet delegate to the bot.');
