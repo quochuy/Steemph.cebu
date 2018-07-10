@@ -124,8 +124,61 @@ const findPost = (
   })
 }
 
+const getSteemPower = async (name) => {
+  const spVest = await new Promise((resolve, reject) => {
+    return steem.api.getAccounts([name], (err, result) => {
+      if (err) reject(new Error(err))
+      let r = result[0]
+      let vestingShares = parseFloat(r.vesting_shares) ? parseFloat(r.vesting_shares) : 0
+      let delegatedVestingShares = parseFloat(r.delegated_vesting_shares) ? parseFloat(r.delegated_vesting_shares) : 0
+      let receivedVestingShares = parseFloat(r.received_vesting_shares) ? parseFloat(r.received_vesting_shares) : 0
+      resolve(vestingShares - delegatedVestingShares + receivedVestingShares)
+    })
+  })
+  let {
+    totalVestingShares,
+    totalVestingFundSteem
+  } = await new Promise((resolve, reject) => {
+    return steem.api.getDynamicGlobalProperties((err, result) => {
+      if (err) reject(new Error(err))
+      resolve({
+        totalVestingShares: parseFloat(result.total_vesting_shares),
+        totalVestingFundSteem: parseFloat(result.total_vesting_fund_steem)
+      })
+    })
+  })
+  const steemPower = steem.formatter.vestToSteem(spVest, totalVestingShares, totalVestingFundSteem)
+  return steemPower
+}
+
+const getDelegateSP = async (name, delegatee) => {
+  const allDelegatee = await new Promise((resolve, reject) => {
+    return steem.api.getVestingDelegations(name, '', 100, function (err, result) {
+      if (err) reject(new Error(err))
+      resolve(result)
+    });
+  })
+  const [checkDelegateTarget] = allDelegatee.filter((data) => !!(data.delegatee === delegatee))
+  let {
+    totalVestingShares,
+    totalVestingFundSteem
+  } = await new Promise((resolve, reject) => {
+    return steem.api.getDynamicGlobalProperties((err, result) => {
+      if (err) reject(new Error(err))
+      resolve({
+        totalVestingShares: parseFloat(result.total_vesting_shares),
+        totalVestingFundSteem: parseFloat(result.total_vesting_fund_steem)
+      })
+    })
+  })
+  const steemPower = steem.formatter.vestToSteem(checkDelegateTarget.vesting_shares, totalVestingShares, totalVestingFundSteem)
+  return steemPower
+}
+
 export {
   upvotePost,
   commentPost,
-  findPost
+  findPost,
+  getSteemPower,
+  getDelegateSP
 };

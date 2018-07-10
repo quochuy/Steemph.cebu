@@ -169,6 +169,10 @@ client.on('message', msg => {
                   // **************************************************
                   // Upvote Post
                   // **************************************************
+                  let weightage
+
+
+
                   return upvotePost(
                       process.env.STEEM_POSTING,
                       process.env.STEEM_USERNAME,
