@@ -3,5 +3,7 @@
   "channelId": "123123123",
   "trigger": "$",
   "timeAllowed": "43200",
-  "weightage": "500"
+  "weightage": "500",
+  "maximumPostAge": "302400000",
+  "minimumPostAge": "1800000"
 }

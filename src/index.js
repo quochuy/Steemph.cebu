@@ -26,7 +26,8 @@ import {
 } from './controller/user';
 import {
   upvotePost,
-  commentPost
+  commentPost,
+  findPost
 } from './controller/upvote';
 
 import {
@@ -56,6 +57,10 @@ client.on('ready', () => {
 
 client.on('message', msg => {
   // **************************************************
+  // Return Bot User
+  // **************************************************
+  if (msg.author.bot) return;
+  // **************************************************
   // Restricted Channel
   // **************************************************
   if (msg.channel.id !== config.channelId) {
@@ -76,6 +81,16 @@ client.on('message', msg => {
     } = msg;
 
     logger.info(currentContent);
+
+    // setup function
+    const redMsg = (reply) => {
+      return msg.reply({
+        embed: {
+          color: 0xff0000,
+          description: reply
+        }
+      })
+    }
 
     // **************************************************
     // Check for trigger
@@ -113,7 +128,7 @@ client.on('message', msg => {
                       if (!!data) {
                         timeDiff = Math.floor(
                           (currentCreatedTimestamp - data) /
-                            1000
+                          1000
                         );
                         if (timeDiff > config.timeAllowed) {
                           // Proceed
@@ -131,9 +146,9 @@ client.on('message', msg => {
                     // Register user
                     // **************************************************
                     return registration(
-                      currentUsername,
-                      currentUserId
-                    )
+                        currentUsername,
+                        currentUserId
+                      )
                       .then(data => {
                         console.log(data);
                         if (data === 'DB_ERROR') {
@@ -143,22 +158,29 @@ client.on('message', msg => {
                       .catch(err => err);
                   }
                 })
+                .then(async () => {
+                  console.log('find post')
+                  return await findPost(authorName.substr(1), permlinkName).catch(err => {
+                    throw err.message
+                  })
+                })
                 .then(() => {
+                  console.log('upvote post')
                   // **************************************************
                   // Upvote Post
                   // **************************************************
                   return upvotePost(
-                    process.env.STEEM_POSTING,
-                    process.env.STEEM_USERNAME,
-                    authorName.substr(1),
-                    permlinkName,
-                    config.weightage
-                  )
+                      process.env.STEEM_POSTING,
+                      process.env.STEEM_USERNAME,
+                      authorName.substr(1),
+                      permlinkName,
+                      config.weightage
+                    )
                     .then(data => {
                       if (data === 'ERROR') {
                         throw 'NO_UPVOTE';
                       } else {
-                        msg.reply(` this post is successfully upvoted by @Steemph.cebu#5291 : ${
+                        msg.reply(`This post is successfully upvoted by ${client.user.tag} : ${
                           args[0]
                         }.
 
@@ -173,9 +195,9 @@ You are now in voting cooldown. ${config.timeAllowed /
                       // Update Date Time of the Post
                       // **************************************************
                       return updateTime(
-                        currentUserId,
-                        currentCreatedTimestamp
-                      )
+                          currentUserId,
+                          currentCreatedTimestamp
+                        )
                         .then(() =>
                           console.log(`data updated`)
                         )
@@ -183,28 +205,28 @@ You are now in voting cooldown. ${config.timeAllowed /
                           throw 'DB_ERROR';
                         });
                     })
-                    .then(() => {
-                      // **************************************************
-                      // Comment on  Post
-                      // **************************************************
-                      return commentPost(
-                        process.env.STEEM_POSTING,
-                        process.env.STEEM_USERNAME,
-                        authorName.substr(1),
-                        permlinkName
-                      );
-                    });
+                  // .then(() => {
+                  //   // **************************************************
+                  //   // Comment on  Post
+                  //   // **************************************************
+                  //   return commentPost(
+                  //     process.env.STEEM_POSTING,
+                  //     process.env.STEEM_USERNAME,
+                  //     authorName.substr(1),
+                  //     permlinkName
+                  //   );
+                  // });
                 })
                 .catch(err => {
-                  console.log(err);
+
                   switch (err) {
                     case 'NO_UPVOTE':
-                      msg.reply(
-                        'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote (Space) URL of your post`.'
+                      redMsg(
+                        'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote <steemit_link>` \n e.g. `$upvote https://steemit.com/blabla/@bla/bla`'
                       );
                       break;
                     case 'NOT_YET_TIME':
-                      msg.reply(
+                      redMsg(
                         `I had already voted on one of your post. Please wait for
  ${timeConvertMessage(
    convert(config.timeAllowed - timeDiff)
@@ -212,25 +234,36 @@ You are now in voting cooldown. ${config.timeAllowed /
                       );
                       break;
                     case 'DB_ERROR':
-                      msg.reply('Database Error');
+                      redMsg('Database Error');
                       break;
                     case 'NO_COMMENT':
-                      msg.reply('No comment');
+                      redMsg('No comment');
+                      break;
+                    case 'OLD':
+                      redMsg('Post too old to get upvoted');
+                      break;
+                    case 'NEW':
+                      redMsg('Post too new to get upvoted');
+                      break;
+                    case 'VOTED':
+                      redMsg('Post already been voted');
+                      break;
+                    case 'CHEETAH':
+                      redMsg('Post voted by cheetah');
                       break;
                     default:
-                      msg.reply('ERROR');
+                      redMsg(JSON.stringify(err));
                       break;
                   }
                 });
 
               break;
             } else {
-              msg.reply('Invalid link');
+              redMsg('Invalid link');
             }
           } else {
-            msg.reply(
-              'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote (Space) URL of your post`.'
-            );
+            redMsg(
+              'I cannot upvote this post. I might already upvoted this post or the link is invalid. Be reminded that for me to vote : \n `$upvote <steemit_link>` \n e.g. `$upvote https://steemit.com/blabla/@bla/bla`');
           }
           break;
         case 'help':

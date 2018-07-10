@@ -1,4 +1,5 @@
 import steem from 'steem';
+import config from '../config.json';
 
 let comment = username => `Congratulations! This post has been upvoted by the communal account, @steemph.cebu by ${username} being run at [Teenvestors Cebu (Road to Financial Freedom Channel)](https://discord.gg/EMMztv4). This service is exclusive to Steemians following the Steemph.cebu trail at Steemauto. Thank you for following Steemph.cebu curation trail!
 
@@ -22,14 +23,14 @@ function upvotePost(
   permlink,
   weightage
 ) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     steem.broadcast.vote(
       steem_posting_key,
       steem_username,
       author,
       permlink,
       weightage,
-      function(err, result) {
+      function (err, result) {
         if (err) {
           reject('ERROR');
         } else if (!result) {
@@ -57,12 +58,11 @@ function commentPost(
     steem_username, // username
     randomString(), // permlink
     '', // Title
-    comment(author),
-    {
+    comment(author), {
       tags: ['philippines'],
       app: 'stephard/0.1'
     }, // json metadata (additional tags, app name, etc)
-    function(err, result) {
+    function (err, result) {
       if (err) {
         console.log(err);
         throw 'err';
@@ -72,4 +72,60 @@ function commentPost(
   );
 }
 
-export { upvotePost, commentPost };
+
+const findPost = (
+  author,
+  permlink
+) => {
+  return new Promise((resolve, reject) => {
+    steem.api.getContent(author, permlink, (err, result) => {
+      if (err) {
+        reject(new Error(err))
+      }
+
+      // check cheetah
+      const isCheetah =
+        result.active_votes.filter((data) => {
+          if (data.voter === 'cheetah') {
+            return true
+          }
+          return false
+        }).length !== 0
+      if (isCheetah) reject(new Error("CHEETAH"))
+
+      const isVoted =
+        result.active_votes.filter((data) => {
+          if (data.voter === process.env.STEEM_USERNAME) {
+            return true
+          }
+          return false
+        }).length !== 0
+
+      if (isVoted) reject(new Error("VOTED"))
+
+      const unixDate = new Date(
+        result.created
+        .replace(/-/g, '/')
+        .replace('T', ' ')
+        .replace('Z', '')
+      ).getTime()
+
+      const postAge = Date.now() - unixDate
+      if (postAge > parseInt(config.maximumPostAge)) {
+        reject(new Error("OLD"))
+      } else if (postAge < parseInt(config.minimumPostAge)) {
+        reject(new Error("NEW"))
+      }
+
+      resolve({
+        msg: "success"
+      })
+    })
+  })
+}
+
+export {
+  upvotePost,
+  commentPost,
+  findPost
+};
