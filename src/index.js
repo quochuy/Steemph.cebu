@@ -240,10 +240,10 @@ You are now in voting cooldown. ${config.timeAllowed /
                       redMsg('No comment');
                       break;
                     case 'OLD':
-                      redMsg('Post too old to get upvoted');
+                      redMsg('Post too old to get upvoted.');
                       break;
                     case 'NEW':
-                      redMsg('Post too new to get upvoted');
+                      redMsg('Post too new to get upvoted.');
                       break;
                     case 'VOTED':
                       redMsg('Post already been voted');
