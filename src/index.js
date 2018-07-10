@@ -163,7 +163,7 @@ client.on('message', msg => {
                   // **************************************************
                   let weightage = 0;
 
-                  if (!msg.member.roles.find('name', 'trail-follower')) {
+                  if (!!msg.member.roles.find('name', 'trail-follower')) {
                     // if a person has the role of 'trail-follower'
                     const temp = await getSteemPower(authorName.substr(1)).catch(err => {
                       throw (err)
