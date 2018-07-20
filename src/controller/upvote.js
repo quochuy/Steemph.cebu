@@ -18,13 +18,10 @@ function upvotePost(steem_posting_key, steem_username, author, permlink, weighta
   return new Promise(function (resolve, reject) {
     steem.broadcast.vote(steem_posting_key, steem_username, author, permlink, weightage, function (err, result) {
       if (err) {
+        console.log(err);
         reject('ERROR');
-      } else if (!result) {
-        reject('ERROR');
-      } else if (!!result.id && !!result.block_num) {
-        resolve(result);
       } else {
-        reject('ERROR');
+        resolve(result);
       }
     });
   }).catch(err => 'ERROR');
