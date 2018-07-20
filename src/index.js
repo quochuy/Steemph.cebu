@@ -120,10 +120,11 @@ client.on('message', msg => {
             let authorName = args[0].split(/[\/#]/)[4].substr(1);
             let permlinkName = args[0].split(/[\/#]/)[5];
             let weightage = parseInt(args[1]);
+            console.log(`${authorName} ${permlinkName} ${weightage}`)
             return upvotePost(
                 process.env.STEEM_POSTING,
                 process.env.STEEM_USERNAME,
-                authorName.substr(1),
+                authorName,
                 permlinkName,
                 weightage * 100
               )
