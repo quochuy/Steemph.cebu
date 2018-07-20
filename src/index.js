@@ -18,10 +18,24 @@ db();
 // ============================================================
 // Controller
 // ============================================================
-import { checkRegisteredUser, checkLastPost, updateTime, registration } from './controller/user';
-import { upvotePost, commentPost, findPost, getSteemPower, getDelegateSP } from './controller/upvote';
+import {
+  checkRegisteredUser,
+  checkLastPost,
+  updateTime,
+  registration
+} from './controller/user';
+import {
+  upvotePost,
+  commentPost,
+  findPost,
+  getSteemPower,
+  getDelegateSP
+} from './controller/upvote';
 
-import { getDateTimeFromTimestamp, timeConvertMessage } from './controller/util';
+import {
+  getDateTimeFromTimestamp,
+  timeConvertMessage
+} from './controller/util';
 
 import config from './config.json';
 import regex from './regex.json';
@@ -60,7 +74,10 @@ client.on('message', msg => {
 
     let {
       id: currentMessageId,
-      author: { username: currentUsername, id: currentUserId },
+      author: {
+        username: currentUsername,
+        id: currentUserId
+      },
       content: currentContent,
       createdTimestamp: currentCreatedTimestamp
     } = msg;
@@ -96,7 +113,7 @@ client.on('message', msg => {
         case 'upvote':
           if (!!msg.member.roles.find('name', 'Admins')) {
             // TODO: ADD ADMIN
-            if (args !== 3) {
+            if (args.length !== 3) {
               redMsg('Invalid command, try use `$upvote link weightage`');
               return;
             }
@@ -104,19 +121,18 @@ client.on('message', msg => {
             let permlinkName = args[1].split(/[\/#]/)[5];
             let weightage = parseInt(args[2]);
             return upvotePost(
-              process.env.STEEM_POSTING,
-              process.env.STEEM_USERNAME,
-              authorName.substr(1),
-              permlinkName,
-              weightage * 100
-            )
+                process.env.STEEM_POSTING,
+                process.env.STEEM_USERNAME,
+                authorName.substr(1),
+                permlinkName,
+                weightage * 100
+              )
               .then(() => {
                 greenMsg('Sucess');
               })
               .catch(() => {
                 redMsg('Failed');
               });
-            return;
           } else if (args.length === 1 && args[0].split(/[\/#]/).length === 6) {
             let authorName = args[0].split(/[\/#]/)[4];
             let permlinkName = args[0].split(/[\/#]/)[5];
@@ -321,12 +337,12 @@ client.on('message', msg => {
                   }
 
                   return upvotePost(
-                    process.env.STEEM_POSTING,
-                    process.env.STEEM_USERNAME,
-                    authorName.substr(1),
-                    permlinkName,
-                    weightage
-                  )
+                      process.env.STEEM_POSTING,
+                      process.env.STEEM_USERNAME,
+                      authorName.substr(1),
+                      permlinkName,
+                      weightage
+                    )
                     .then(data => {
                       if (data === 'ERROR') {
                         throw 'NO_UPVOTE';
