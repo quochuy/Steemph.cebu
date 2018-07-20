@@ -113,13 +113,13 @@ client.on('message', msg => {
         case 'upvote':
           if (!!msg.member.roles.find('name', 'Admins')) {
             // TODO: ADD ADMIN
-            if (args.length !== 3) {
+            if (args.length !== 2) {
               redMsg('Invalid command, try use `$upvote link weightage`');
               return;
             }
-            let authorName = args[1].split(/[\/#]/)[4].substr(1);
-            let permlinkName = args[1].split(/[\/#]/)[5];
-            let weightage = parseInt(args[2]);
+            let authorName = args[0].split(/[\/#]/)[4].substr(1);
+            let permlinkName = args[0].split(/[\/#]/)[5];
+            let weightage = parseInt(args[1]);
             return upvotePost(
                 process.env.STEEM_POSTING,
                 process.env.STEEM_USERNAME,
